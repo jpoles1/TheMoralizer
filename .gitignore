@@ -1,2 +1,3 @@
 .idea*
 .openshift*
+node_modules*
