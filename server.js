@@ -3,7 +3,8 @@
 var express = require('express');
 var fs      = require('fs');
 var mongo = require('mongolian');
-
+var bodyparser = require("body-parser");
+var md5 = require('MD5');
 /**
  *  Define the sample application.
  */
@@ -29,8 +30,8 @@ var moralizer = function() {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            //self.ipaddress = "127.0.0.1";
-            self.ipaddress = "192.168.1.109";
+            self.ipaddress = "127.0.0.1";
+            //self.ipaddress = "192.168.1.109";
         }
     };
 
@@ -95,26 +96,59 @@ var moralizer = function() {
      *  the handlers.
      */
     self.setupMongo = function(){
-        //self.db = new mongo(self.mongourl);
+        self.mongoserver = new mongo(self.mongourl);
+        self.userdb = self.mongoserver.db("users");
+        self.userlist = self.userdb.collection("userlist")
     }
     self.initializeServer = function() {
         self.app = express();
+        self.app.use(bodyparser.urlencoded({ extended: false }));
         self.app.use("/res", express.static(__dirname + '/res', {dotfiles: "deny"}));
         self.app.get("/", function(req, res) {
             res.setHeader('Content-Type', 'text/html');
             //res.send(self.cache_get('index.html') );
             res.sendfile("index.html");
         });
-        self.app.post("signup", function(req, res) {
-            console.log(req);
-            console.log(res);
-            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-            var emailval = email.match(re);
-            console.log(emailval);
+        self.app.post("/signup", function(req, res) {
+            var email = req.body.email;
+            var uname = req.body.uname;
+            var pass = req.body.pass;
+            var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            var emailval = email.match(regex);
+            var emailuse = 0;
+            console.log(self.userlist.find({email: email}).size());
+            self.userlist.find({email: email}).forEach(function(dat){
+                console.log(dat);
+                emailuse=emailuse+1;
+                console.log(emailuse);
+            });
+            console.log(emailuse);
+            if(emailval==null){
+                res.send("Invalid email");
+            }
+            else if(emailuse > 0){
+                res.send("Email is already associated with another user.")
+            }
+            else{
+                self.userlist.insert({
+                    uname: uname,
+                    pass: pass,
+                    email: email
+                });
+                res.send("success");
+            }
         });
     }
 
-
+    self.getMongoTimestamp = function(id){
+        var timestamp = id.toString().substring(0,8);
+        var date = new Date(parseInt(timestamp, 16)*1000);
+        return date;
+    }
+    self.passwordHash = function(uname, pass){
+        var date = new Date();
+        return md5(date.getUTCMonth()+uname+pass+date.getUTCDay()+date.getUTCFullYear())
+    }
     /**
      *  Initializes the application.
      */
