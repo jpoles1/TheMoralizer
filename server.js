@@ -69,7 +69,6 @@ var moralizer = function() {
      *  @param {string} sig  Signal to terminate on.
      */
     self.terminator = function(sig){
-        self.mongoserver.close();
         if (typeof sig === "string") {
            console.log('%s: Received %s - terminating sample app ...',
                        Date(Date.now()), sig);
@@ -105,9 +104,7 @@ var moralizer = function() {
      */
     self.setupMongo = function(){
         //self.mongoserver = new mongo(self.mongourl);
-        console.log(self.mongourl+"/users");
-        mongo.connect(self.mongourl+"/users", function(err, db){console.log(err); self.mongoserver=db;self.userlist = self.mongoserver.collection("userlist");});
-
+        //console.log(self.mongourl+"/users");
         //self.userdb = self.mongoserver.db("users");
 
     }
@@ -126,13 +123,7 @@ var moralizer = function() {
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var emailval = email.match(regex);
-            var emailuse = 0;
-            console.log(self.userlist.find({email: email}).size());
-            /*self.userlist.find({email: email}).forEach(function(dat){
-                console.log(dat);
-                emailuse=emailuse+1;
-                console.log(emailuse);
-            });*/
+            var emailuse = self.matchEmail(email);
             console.log(emailuse);
             if(emailval==null){
                 res.send("Invalid email");
@@ -146,19 +137,36 @@ var moralizer = function() {
                     pass: pass,
                     email: email
                 });*/
-                self.userlist.insert({
-                    uname: uname,
-                    pass: pass,
-                    email: email
-                },
-                function(err, result){
-                    console.log(result);
+                self.mongoQuery(function() {
+                    self.userlist.insert({
+                            uname: uname,
+                            pass: pass,
+                            email: email
+                    },
+                    function (err, result) {
+                        //console.log(result);
+                    });
                 });
                 res.send("success");
             }
         });
     }
-
+    self.matchEmail = function(email){
+        var result;
+        mongo.connect(self.mongourl+"/users", function(err, db){
+            if(typeof err!=null){
+                console.log("Error: "+err);
+            }
+            var userlist = db.collection("userlist");
+            userlist.find({email: email}).toArray(function(err, docs){
+                console.log(docs);
+                result = docs.length;
+            });
+            db.close();
+        });
+        result=1;
+        return result;
+    }
     self.getMongoTimestamp = function(id){
         var timestamp = id.toString().substring(0,8);
         var date = new Date(parseInt(timestamp, 16)*1000);
@@ -175,7 +183,7 @@ var moralizer = function() {
         self.setupVariables();
         self.populateCache();
         self.setupTerminationHandlers();
-        self.setupMongo();
+        //self.setupMongo();
         // Create the express server and routes.
         self.initializeServer();
     };
