@@ -24,6 +24,7 @@
     "MD5": "^1.2.1",
     "body-parser": "^1.12.2",
     "express": "~3.4.4",
+    "mongodb": "^2.0.25",
     "mongolian": ">0.1.17"
   },
   "devDependencies": {},

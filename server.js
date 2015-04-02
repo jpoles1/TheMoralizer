@@ -2,7 +2,8 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs      = require('fs');
-var mongo = require('mongolian');
+//var mongo = require('mongolian');
+var mongo = require('mongodb');
 var bodyparser = require("body-parser");
 var md5 = require('MD5');
 /**
@@ -33,6 +34,12 @@ var moralizer = function() {
             self.ipaddress = "127.0.0.1";
             //self.ipaddress = "192.168.1.109";
         }
+        if (typeof self.mongourl === "undefined") {
+            //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
+            //  allows us to run/test the app locally.
+            console.warn('No OPENSHIFT_MONGO_DB_URL var, using mongodb://localhost:27017');
+            self.mongourl = "mongodb://localhost:27017";
+        }
     };
 
 
@@ -62,6 +69,7 @@ var moralizer = function() {
      *  @param {string} sig  Signal to terminate on.
      */
     self.terminator = function(sig){
+        self.mongoserver.close();
         if (typeof sig === "string") {
            console.log('%s: Received %s - terminating sample app ...',
                        Date(Date.now()), sig);
@@ -96,9 +104,12 @@ var moralizer = function() {
      *  the handlers.
      */
     self.setupMongo = function(){
-        self.mongoserver = new mongo(self.mongourl);
-        self.userdb = self.mongoserver.db("users");
-        self.userlist = self.userdb.collection("userlist")
+        //self.mongoserver = new mongo(self.mongourl);
+        console.log(self.mongourl+"/users");
+        mongo.connect(self.mongourl+"/users", function(err, db){console.log(err); self.mongoserver=db;self.userlist = self.mongoserver.collection("userlist");});
+
+        //self.userdb = self.mongoserver.db("users");
+
     }
     self.initializeServer = function() {
         self.app = express();
@@ -117,11 +128,11 @@ var moralizer = function() {
             var emailval = email.match(regex);
             var emailuse = 0;
             console.log(self.userlist.find({email: email}).size());
-            self.userlist.find({email: email}).forEach(function(dat){
+            /*self.userlist.find({email: email}).forEach(function(dat){
                 console.log(dat);
                 emailuse=emailuse+1;
                 console.log(emailuse);
-            });
+            });*/
             console.log(emailuse);
             if(emailval==null){
                 res.send("Invalid email");
@@ -130,10 +141,18 @@ var moralizer = function() {
                 res.send("Email is already associated with another user.")
             }
             else{
+                /*self.userlist.insert({
+                    uname: uname,
+                    pass: pass,
+                    email: email
+                });*/
                 self.userlist.insert({
                     uname: uname,
                     pass: pass,
                     email: email
+                },
+                function(err, result){
+                    console.log(result);
                 });
                 res.send("success");
             }
