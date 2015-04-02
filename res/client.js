@@ -9,4 +9,20 @@ $(function(){
         e.preventDefault();
 
     });
+    $("#signupsubmit").click(function(){
+        var email = $("#email").val();
+        var uname = $("#signupuname").val();
+        var passw = $("#signuppass").val();
+        $.post("signup", {uname: uname, email: email, pass: passw}, function(dat){
+            alert(dat);
+            if(dat=="success"){
+                pass;
+            }
+            else{
+                $("#signuperror").html(dat);
+                $("#signuperror").show();
+                return false;
+            }
+        });
+    });
 });

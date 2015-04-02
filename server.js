@@ -2,7 +2,7 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs      = require('fs');
-
+var mongo = require('mongolian');
 
 /**
  *  Define the sample application.
@@ -24,12 +24,13 @@ var moralizer = function() {
         //  Set the environment variables we need.
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
         self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-
+        self.mongourl = process.env.OPENSHIFT_MONGODB_DB_URL;
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            self.ipaddress = "127.0.0.1";
+            //self.ipaddress = "127.0.0.1";
+            self.ipaddress = "192.168.1.109";
         }
     };
 
@@ -90,42 +91,38 @@ var moralizer = function() {
     /*  ================================================================  */
 
     /**
-     *  Create the routing table entries + handlers for the application.
-     */
-    self.createRoutes = function() {
-        self.routes = { };
-
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            //res.send(self.cache_get('index.html') );
-            res.sendfile("index.html");
-        };
-    };
-
-
-    /**
      *  Initialize the server (express) and create the routes and register
      *  the handlers.
      */
+    self.setupMongo = function(){
+        //self.db = new mongo(self.mongourl);
+    }
     self.initializeServer = function() {
-        self.createRoutes();
         self.app = express();
         self.app.use("/res", express.static(__dirname + '/res', {dotfiles: "deny"}));
-        //  Add handlers for the app (from the routes).
-        for (var r in self.routes) {
-            self.app.get(r, self.routes[r]);
-        }
-    };
+        self.app.get("/", function(req, res) {
+            res.setHeader('Content-Type', 'text/html');
+            //res.send(self.cache_get('index.html') );
+            res.sendfile("index.html");
+        });
+        self.app.post("signup", function(req, res) {
+            console.log(req);
+            console.log(res);
+            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            var emailval = email.match(re);
+            console.log(emailval);
+        });
+    }
 
 
     /**
-     *  Initializes the sample application.
+     *  Initializes the application.
      */
     self.initialize = function() {
         self.setupVariables();
         self.populateCache();
         self.setupTerminationHandlers();
-
+        self.setupMongo();
         // Create the express server and routes.
         self.initializeServer();
     };

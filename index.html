@@ -29,7 +29,7 @@
             Crowdsourcing Morality and Ethics.
         </p>
         <p>
-            <a href="#signin" class="pure-button pure-button-primary">Get Started</a>
+            <a href="#signin" class="pure-button pure-button-primary" id="getstartedbutton">Get Started</a>
         </p>
     </div>
 </div>
@@ -75,13 +75,13 @@
         <div class="pure-g">
             <div class="l-box-lrg pure-u-1-2 pure-u-md-1">
                 <h2>Sign In</h2>
-                <form class="pure-form pure-form-stacked">
+                <form class="pure-form pure-form-stacked" method="post">
                     <fieldset>
-                        <label for="username">Username:</label>
-                        <input id="username" type="text" placeholder="username">
+                        <label for="signinuname">Username:</label>
+                        <input id="signinuname" type="text" placeholder="username">
 
-                        <label for="password">Password:</label>
-                        <input id="password" type="password" placeholder="password">
+                        <label for="signinpass">Password:</label>
+                        <input id="signinpass" type="password" placeholder="password">
 
                         <button type="submit" class="pure-button" id="loginsubmit">Login</button>
                     </fieldset>
@@ -89,17 +89,18 @@
             </div>
             <div class="l-box-lrg pure-u-1-2 pure-u-md-1">
                 <h2>Sign Up</h2>
-                <form class="pure-form pure-form-stacked">
+                <div id="signuperror" class="error" style="display: none"></div>
+                <form class="pure-form pure-form-stacked" method="post">
                     <fieldset>
-                        <label for="username">Username:</label>
-                        <input id="username" type="text" placeholder="username">
+                        <label for="signupuname">Username:</label>
+                        <input id="signupuname" type="text" placeholder="username">
 
 
                         <label for="email">Your Email</label>
                         <input id="email" type="email" placeholder="email">
 
-                        <label for="password">Your Password</label>
-                        <input id="password" type="password" placeholder="password">
+                        <label for="signuppass">Your Password</label>
+                        <input id="signuppass" type="password" placeholder="password">
 
                         <button type="submit" class="pure-button" id="signupsubmit">Sign Up</button>
                     </fieldset>
