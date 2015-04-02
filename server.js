@@ -97,7 +97,8 @@ var moralizer = function() {
 
         self.routes['/'] = function(req, res) {
             res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
+            //res.send(self.cache_get('index.html') );
+            res.sendfile("index.html");
         };
     };
 
@@ -136,8 +137,7 @@ var moralizer = function() {
     self.start = function() {
         //  Start the app on the specific interface (and port).
         self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
+            console.log('%s: Node server started on %s:%d ...', Date(Date.now() ), self.ipaddress, self.port);
         });
     };
 
