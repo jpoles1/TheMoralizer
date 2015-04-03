@@ -2,10 +2,14 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs      = require('fs');
-//var mongo = require('mongolian');
-var mongo = require('mongodb');
 var bodyparser = require("body-parser");
+var cookieParser = require('cookie-parser');
 var md5 = require('MD5');
+//Setup DB
+var mongo = require('mongodb');
+var monk = require('monk');
+var db = monk('localhost:27017/moralizer');
+db.on('error', console.error.bind(console, 'connection error:'));
 /**
  *  Define the sample application.
  */
@@ -102,71 +106,75 @@ var moralizer = function() {
      *  Initialize the server (express) and create the routes and register
      *  the handlers.
      */
-    self.setupMongo = function(){
-        //self.mongoserver = new mongo(self.mongourl);
-        //console.log(self.mongourl+"/users");
-        //self.userdb = self.mongoserver.db("users");
-
-    }
     self.initializeServer = function() {
         self.app = express();
-        self.app.use(bodyparser.urlencoded({ extended: false }));
+        self.app.use(bodyparser.urlencoded({extended: false}));
+        var keylist = ["MORALITY", "JUSTICE", "ETHICS"];
+        var  keys = Keygrip(keylist);
+        express.createServer(Cookies.express(keys));
         self.app.use("/res", express.static(__dirname + '/res', {dotfiles: "deny"}));
-        self.app.get("/", function(req, res) {
+        self.app.get("/", function (req, res) {
             res.setHeader('Content-Type', 'text/html');
             //res.send(self.cache_get('index.html') );
             res.sendfile("index.html");
         });
-        self.app.post("/signup", function(req, res) {
+        self.app.post("/signup", function (req, res) {
             var email = req.body.email;
             var uname = req.body.uname;
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var emailval = email.match(regex);
-            var emailuse = self.matchEmail(email);
-            console.log(emailuse);
-            if(emailval==null){
-                res.send("Invalid email");
-            }
-            else if(emailuse > 0){
-                res.send("Email is already associated with another user.")
-            }
-            else{
-                /*self.userlist.insert({
-                    uname: uname,
-                    pass: pass,
-                    email: email
-                });*/
-                self.mongoQuery(function() {
-                    self.userlist.insert({
+            var users = db.get('users');
+            var checkemails = users.find({email: email});
+            var checkusers = users.find({uname: uname});
+            var emailuse = 1;
+            var unameuse = 1;
+            checkemails.on('success', function (emails) {
+                emailuse = emails.length;
+                checkusers.on('success', function (userlist) {
+                    unameuse = userlist.length;
+                    console.log(unameuse);
+                    if (emailval == null) {
+                        res.send("Invalid email");
+                    }
+                    else if (emailuse > 0) {
+                        res.send("Email is already associated with another account.")
+                    }
+                    else if (unameuse > 0) {
+                        res.send("Username is already associated with another account.")
+                    }
+                    else if (uname.length < 2) {
+                        res.send("Please enter a valid username.");
+                    }
+                    else {
+                        var adduser = users.insert({
                             uname: uname,
                             pass: pass,
                             email: email
-                    },
-                    function (err, result) {
-                        //console.log(result);
-                    });
+                        });
+                        adduser.on('success', function () {
+                            res.send("success");
+                        });
+                    }
                 });
-                res.send("success");
-            }
-        });
-    }
-    self.matchEmail = function(email){
-        var result;
-        mongo.connect(self.mongourl+"/users", function(err, db){
-            if(typeof err!=null){
-                console.log("Error: "+err);
-            }
-            var userlist = db.collection("userlist");
-            userlist.find({email: email}).toArray(function(err, docs){
-                console.log(docs);
-                result = docs.length;
             });
-            db.close();
         });
-        result=1;
-        return result;
-    }
+        self.app.post("/signin", function(req, res){
+            var uname = req.body.uname;
+            var pass = req.body.pass;
+            console.log(pass);
+            var users = db.get('users');
+            var checkaccount = users.find({uname: uname, pass: pass});
+            checkaccount.on('success', function (users) {
+                if(users.length==1){
+                    res.send("correct");
+                }
+                else{
+                    res.send("Incorrect Username or Password");
+                }
+            });
+        });
+    };
     self.getMongoTimestamp = function(id){
         var timestamp = id.toString().substring(0,8);
         var date = new Date(parseInt(timestamp, 16)*1000);
@@ -174,7 +182,7 @@ var moralizer = function() {
     }
     self.passwordHash = function(uname, pass){
         var date = new Date();
-        return md5(date.getUTCMonth()+uname+pass+date.getUTCDay()+date.getUTCFullYear())
+        return md5(uname+pass);
     }
     /**
      *  Initializes the application.
@@ -209,4 +217,3 @@ var moralizer = function() {
 var zapp = new moralizer();
 zapp.initialize();
 zapp.start();
-

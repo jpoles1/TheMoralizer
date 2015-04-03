@@ -1,4 +1,7 @@
-var x = "test";
+var login = function(uname){
+    //res.cookie('name', uname, {secure: true});
+    location.reload();
+}
 $(function(){
     $('a[href^="#"]').click(function() {
 
@@ -9,30 +12,56 @@ $(function(){
         e.preventDefault();
 
     });
-    $("#signup").submit(function(){
-        var email = $("#email").val();
-        var uname = $("#signupuname").val();
-        var passw = $("#signuppass").val();
-        var date = new Date();
+    $("#signin").submit(function(){
+        var uname = $("#signinuname").val();
+        var passw = $("#signinpass").val();
         $.ajax({
             type: "POST",
-            url: "signup",
-            data: {uname: uname, email: email, pass: md5(date.getUTCMonth()+uname+passw+date.getUTCDay()+date.getUTCFullYear())},
+            url: "signin",
+            data: {uname: uname, pass: md5(uname+passw)},
             success: function(dat){
-                if(dat=="success"){
-                    alert("yay");
-                    location.reload();
+                if(dat=="correct"){
+                    login(uname);
                 }
                 else{
-                    $("#signuperror").html(dat);
-                    $("#signuperror").show();
-                    return false;
+                    $("#signinerror").html(dat);
+                    $("#signinerror").show();
                 }
             },
             fail: function(dat){
                 alert(dat);
             }
         });
+        return false;
+    });
+    $("#signup").submit(function(){
+        var email = $("#email").val();
+        var uname = $("#signupuname").val();
+        var passw = $("#signuppass").val();
+        var regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
+        if(passw.match(regex)==null){
+            $("#signuperror").html("Password must be between 6 to 20 characters and contain at least one numeric digit, one uppercase and one lowercase letter");
+            $("#signuperror").show();
+        }
+        else{
+            $.ajax({
+                type: "POST",
+                url: "signup",
+                data: {uname: uname, email: email, pass: md5(uname+passw)},
+                success: function(dat){
+                    if(dat=="success"){
+                        login(uname);
+                    }
+                    else{
+                        $("#signuperror").html(dat);
+                        $("#signuperror").show();
+                    }
+                },
+                fail: function(dat){
+                    alert(dat);
+                }
+            });
+        }
         return false;
     });
 });

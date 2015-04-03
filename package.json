@@ -23,9 +23,11 @@
   "dependencies": {
     "MD5": "^1.2.1",
     "body-parser": "^1.12.2",
+    "cookies": "^0.5.0",
     "express": "~3.4.4",
-    "mongodb": "^2.0.25",
-    "mongolian": ">0.1.17"
+    "keygrip": "^1.0.1",
+    "mongodb": "~1.2.14",
+    "monk": "^1.0.1"
   },
   "devDependencies": {},
   "bundleDependencies": [],
