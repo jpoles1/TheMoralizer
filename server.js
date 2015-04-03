@@ -5,7 +5,7 @@ var http = require("http");
 var https = require('https');
 var fs      = require('fs');
 var bodyparser = require("body-parser");
-var Cookies = require('cookies');
+var cookieParser = require('cookie-parser');
 var Keygrip = require('keygrip');
 var md5 = require('MD5');
 //Setup DB
@@ -112,20 +112,22 @@ var moralizer = function() {
     self.initializeServer = function() {
         self.app = express();
         self.app.use(bodyparser.urlencoded({extended: false}));
-        var keylist = ["MORALITY", "JUSTICE", "ETHICS"];
-        self.cookiekeys = Keygrip(keylist);
-        express.createServer(Cookies.express(self.cookiekeys));
+        self.app.use(cookieParser(md5("MoRaLiTy")));
         self.app.use("/res", express.static(__dirname + '/res', {dotfiles: "deny"}));
         self.app.get("/", function (req, res) {
             //res.setHeader('Content-Type', 'text/html');
-            var cookies = new Cookies( req, res, [self.cookiekeys]);
-            if(cookies('login', {signed: true})==1){
+            if(req.signedCookies.login==1){
                 res.sendfile("main.html");
             }
             else{
                 res.sendfile("index.html");
                 //res.send(self.cache_get('index.html') );
             }
+        });
+        self.app.get("/logout" , function(req, res){
+            res.clearCookie("login");
+            res.clearCookie("uname");
+            res.redirect("/");
         });
         self.app.post("/signup", function (req, res) {
             var email = req.body.email;
@@ -162,9 +164,8 @@ var moralizer = function() {
                             email: email
                         });
                         adduser.on('success', function () {
-                            var cookies = new Cookies( req, res, [self.cookiekeys]);
-                            cookies.set('name', uname, {signed: true});
-                            cookies.set('login', 1, {signed: true});
+                            res.cookie('login', 1, { signed: true });
+                            res.cookie('uname', uname, { signed: true });
                             res.send("success");
                         });
                     }
@@ -179,9 +180,8 @@ var moralizer = function() {
             var checkaccount = users.find({uname: uname, pass: pass});
             checkaccount.on('success', function (users) {
                 if(users.length==1){
-                    var cookies = new Cookies( req, res, [self.cookiekeys]);
-                    cookies.set('name', uname, {signed: true});
-                    cookies.set('login', 1, {signed: true});
+                    res.cookie('uname', uname, { signed: true });
+                    res.cookie('login', 1, { signed: true });
                     res.send("correct");
                 }
                 else{
