@@ -1,5 +1,4 @@
 var login = function(uname){
-    //res.cookie('name', uname, {secure: true});
     location.reload();
 }
 $(function(){
