@@ -11,8 +11,6 @@ var md5 = require('MD5');
 //Setup DB
 var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/moralizer');
-db.on('error', console.error.bind(console, 'connection error:'));
 /**
  *  Define the sample application.
  */
@@ -135,7 +133,7 @@ var moralizer = function() {
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var emailval = email.match(regex);
-            var users = db.get('users');
+            var users = self.db.get('users');
             var checkemails = users.find({email: email});
             var checkusers = users.find({uname: uname});
             var emailuse = 1;
@@ -176,7 +174,7 @@ var moralizer = function() {
             var uname = req.body.uname;
             var pass = req.body.pass;
             console.log(pass);
-            var users = db.get('users');
+            var users = self.db.get('users');
             var checkaccount = users.find({uname: uname, pass: pass});
             checkaccount.on('success', function (users) {
                 if(users.length==1){
@@ -208,6 +206,8 @@ var moralizer = function() {
         self.setupTerminationHandlers();
         //self.setupMongo();
         // Create the express server and routes.
+        self.db = monk(self.mongourl);
+        self.db.on('error', function(){alert("DB Failure")});
         self.initializeServer();
     };
 
