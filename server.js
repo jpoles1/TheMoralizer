@@ -44,7 +44,7 @@ var moralizer = function() {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_MONGO_DB_URL var, using mongodb://localhost:27017');
-            self.mongourl = "mongodb://morality:justiticia@ds051110.mongolab.com:51110/automation";
+            self.mongourl = "mongodb://morality:justicia@ds051110.mongolab.com:51110/automation";
             self.collectionName = "moralizer.users";
         }
     };
@@ -175,12 +175,11 @@ var moralizer = function() {
         self.app.post("/signin", function(req, res){
             var uname = req.body.uname;
             var pass = req.body.pass;
-            console.log(uname+"  "+pass);
             var users = self.db.get(self.collectionName);
-            var checkaccount = users.find({});
+            var checkaccount = users.find({uname: uname, pass: pass});
             checkaccount.on('success', function (users) {
                 console.log(users);
-                if(users.length>1){
+                if(users.length==1){
                     res.cookie('uname', uname, { signed: true });
                     res.cookie('login', 1, { signed: true });
                     res.send("correct");
