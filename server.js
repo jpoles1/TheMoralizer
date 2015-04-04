@@ -32,6 +32,7 @@ var moralizer = function() {
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
         self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
         self.mongourl = process.env.OPENSHIFT_MONGODB_DB_URL;
+        self.collectionName = "users";
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
@@ -43,7 +44,8 @@ var moralizer = function() {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_MONGO_DB_URL var, using mongodb://localhost:27017');
-            self.mongourl = "mongodb://localhost:27017";
+            self.mongourl = "mongodb://morality:justiticia@ds051110.mongolab.com:51110/automation";
+            self.collectionName = "moralizer.users";
         }
     };
 
@@ -133,7 +135,7 @@ var moralizer = function() {
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var emailval = email.match(regex);
-            var users = self.db.get('users');
+            var users = self.db.get(self.collectionName);
             var checkemails = users.find({email: email});
             var checkusers = users.find({uname: uname});
             var emailuse = 1;
@@ -174,7 +176,7 @@ var moralizer = function() {
             var uname = req.body.uname;
             var pass = req.body.pass;
             console.log(uname+"  "+pass);
-            var users = self.db.get('users');
+            var users = self.db.get(self.collectionName);
             var checkaccount = users.find({});
             checkaccount.on('success', function (users) {
                 console.log(users);
@@ -208,7 +210,7 @@ var moralizer = function() {
         //self.setupMongo();
         // Create the express server and routes.
         self.db = monk(self.mongourl);
-        self.db.on('success', function(){console.log("DB connected!")});
+        self.db.on('complete', function(){console.log("DB connected!")});
         self.db.on('error', function(){console.log("DB Failure")});
         self.initializeServer();
     };
