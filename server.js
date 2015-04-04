@@ -173,11 +173,12 @@ var moralizer = function() {
         self.app.post("/signin", function(req, res){
             var uname = req.body.uname;
             var pass = req.body.pass;
-            console.log(pass);
+            console.log(uname+"  "+pass);
             var users = self.db.get('users');
-            var checkaccount = users.find({uname: uname, pass: pass});
+            var checkaccount = users.find({});
             checkaccount.on('success', function (users) {
-                if(users.length==1){
+                console.log(users);
+                if(users.length>1){
                     res.cookie('uname', uname, { signed: true });
                     res.cookie('login', 1, { signed: true });
                     res.send("correct");
@@ -207,7 +208,8 @@ var moralizer = function() {
         //self.setupMongo();
         // Create the express server and routes.
         self.db = monk(self.mongourl);
-        self.db.on('error', function(){alert("DB Failure")});
+        self.db.on('success', function(){console.log("DB connected!")});
+        self.db.on('error', function(){console.log("DB Failure")});
         self.initializeServer();
     };
 
