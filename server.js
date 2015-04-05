@@ -124,25 +124,38 @@ var moralizer = function() {
                 var wordregex =  /(\w){4,}/;
                 var tagregex = /^\w(\s*,?\s*\w)*$/;
                 var sentenceregex = /(\w+\s){4,}\w/;
-                var title = req.body.title;
-                var tags = req.body.tags;
-                var post = req.body.post;
+                var optionregex = /\w+/;
+                var formdata = JSON.parse(req.body.dat);
+                console.log(formdata);
+                var title = formdata.title;
+                var tags = formdata.tags;
+                var post = formdata.post;
+                var opt = formdata.opt;
+                var validoptions = 0;
+                for (i = 0; i < opt.length; i++) {
+                    if(optionregex.test(opt[i])==true){
+                        validoptions++;
+                    }
+                }
                 if(!wordregex.test(title)){
                     res.send("Title must be at least four characters long!");
                 }
                 else if(!sentenceregex.test(post)){
                     res.send("Question must be at least five words long!");
                 }
+                else if(validoptions!=opt.length){
+                    res.send("Please submit at least "+opt.length+" valid options (at least two words)!");
+                }
                 else if(!(tagregex.test(tags) || tags=="")){
                     res.send("Tags must be separate by commas, and no spaces are allowed (you may use underscore_to denote spaces).");
                 }
                 else{
                     var askadd = self.users.insert({
-                    uname: req.signedCookies.uname,
-                    title: title,
-                    post: post,
-                    options: req.body.options,
-                    tags: tags
+                        uname: req.signedCookies.uname,
+                        title: title,
+                        post: post,
+                        options: opt,
+                        tags: tags
                     });
                     askadd.on('success', function () {
                         res.send("success");
