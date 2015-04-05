@@ -1,3 +1,4 @@
+var captcha = "t";
 $(function(){
     var numopt = 2;
     var maxopt = 10;
@@ -17,7 +18,6 @@ $(function(){
     $("#submitq").submit(function(e){submitq(e)});
 });
 var submitq = function(e){
-    alert("Tst");
     var title = $("#title").val();
     var post = $("#post").val();
     var options = [];
@@ -32,7 +32,8 @@ var submitq = function(e){
             title: title,
             post: post,
             opt: options,
-            tags: tags
+            tags: tags,
+            captcha: captcha
         })},
         success: function(dat){
             if(dat=="success"){
@@ -50,4 +51,12 @@ var submitq = function(e){
         }
     });
     e.preventDefault();
+}
+var setupCaptcha = function(){
+    grecaptcha.render('g-recaptcha', {
+      'sitekey' : '6Lc82wQTAAAAACf78hAgAbZh73k6tGpPZwpUfNvc',
+      'callback' : function(resp){
+          captcha = resp;
+      }
+    });
 }

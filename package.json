@@ -30,7 +30,8 @@
     "keygrip": "^1.0.1",
     "mongodb": "~1.2.14",
     "monk": "^1.0.1",
-    "qs": "^2.4.1"
+    "qs": "^2.4.1",
+    "restler": "^3.2.2"
   },
   "devDependencies": {},
   "bundleDependencies": [],

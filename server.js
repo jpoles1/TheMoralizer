@@ -1,5 +1,6 @@
 #!/bin/env node
 //  OpenShift sample Node application
+var rest = require('restler');
 var express = require('express');
 var http = require("http");
 var https = require('https');
@@ -126,11 +127,11 @@ var moralizer = function() {
                 var sentenceregex = /(\w+\s){4,}\w/;
                 var optionregex = /\w+/;
                 var formdata = JSON.parse(req.body.dat);
-                console.log(formdata);
                 var title = formdata.title;
                 var tags = formdata.tags;
                 var post = formdata.post;
                 var opt = formdata.opt;
+                var captcha = formdata.captcha;
                 var validoptions = 0;
                 for (i = 0; i < opt.length; i++) {
                     if(optionregex.test(opt[i])==true){
@@ -150,18 +151,25 @@ var moralizer = function() {
                     res.send("Tags must be separate by commas, and no spaces are allowed (you may use underscore_to denote spaces).");
                 }
                 else{
-                    var askadd = self.users.insert({
-                        uname: req.signedCookies.uname,
-                        title: title,
-                        post: post,
-                        options: opt,
-                        tags: tags
-                    });
-                    askadd.on('success', function () {
-                        res.send("success");
-                    });
-                    askadd.on('failure', function (err) {
-                        res.send(err);
+                    rest.get("https://www.google.com/recaptcha/api/siteverify?secret=6Lc82wQTAAAAABicK2uab_1pP0ZMRdYvdmH81AmC&response="+captcha).on('complete', function(data){
+                        if(data.success==true){
+                            var askadd = self.users.insert({
+                                uname: req.signedCookies.uname,
+                                title: title,
+                                post: post,
+                                options: opt,
+                                tags: tags
+                            });
+                            askadd.on('success', function () {
+                                res.send("success");
+                            });
+                            askadd.on('failure', function (err) {
+                                res.send(err);
+                            });
+                        }
+                        else{
+                            res.send("CAPTCHA FAILED!");
+                        }
                     });
                 }
             }
@@ -188,7 +196,6 @@ var moralizer = function() {
                 emailuse = emails.length;
                 checkusers.on('success', function (userlist) {
                     unameuse = userlist.length;
-                    console.log(unameuse);
                     if (emailval == null) {
                         res.send("Invalid email");
                     }
@@ -222,7 +229,6 @@ var moralizer = function() {
             var users = self.db.get(self.collectionName);
             var checkaccount = self.users.find({uname: uname, pass: pass});
             checkaccount.on('success', function (users) {
-                console.log(users);
                 if(users.length==1){
                     res.cookie('uname', uname, { signed: true });
                     res.cookie('login', 1, { signed: true });
