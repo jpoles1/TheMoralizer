@@ -86,8 +86,13 @@ a.pure-button-primary {
     border-radius: 5px;
     font-size: 120%;
 }
-
-
+.button-success {
+        background: rgb(28, 184, 65); /* this is a green */
+    }
+textarea{
+    color: black;
+    font-weight: bold;
+}
 /*
  * -- MENU STYLES --
  * I want to customize how my .pure-menu looks at the top of the page
@@ -115,7 +120,7 @@ a.pure-button-primary {
 }
 
 .home-menu .pure-menu-selected a {
-    color: white;
+    color: white !important;
 }
 
 .home-menu a {
@@ -137,7 +142,7 @@ a.pure-button-primary {
     border-radius: 15px;
     padding: 30px;
 }
-.entry h1,h2,h3{
+.entry h1,h2,h3,h4,h5{
     margin-top: 8px;
     margin-bottom: 8px;
 }

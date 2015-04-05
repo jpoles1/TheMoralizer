@@ -115,7 +115,7 @@ a.pure-button-primary {
 }
 
 .home-menu .pure-menu-selected a {
-    color: white;
+    color: white !important;
 }
 
 .home-menu a {

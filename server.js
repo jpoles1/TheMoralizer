@@ -5,34 +5,21 @@ var http = require("http");
 var https = require('https');
 var fs      = require('fs');
 var bodyparser = require("body-parser");
+//Cookies
 var cookieParser = require('cookie-parser');
 var Keygrip = require('keygrip');
+//Pass encryption
 var md5 = require('MD5');
 //Setup DB
 var mongo = require('mongodb');
 var monk = require('monk');
-/**
- *  Define the sample application.
- */
 var moralizer = function() {
-
-    //  Scope.
     var self = this;
-
-
-    /*  ================================================================  */
-    /*  Helper functions.                                                 */
-    /*  ================================================================  */
-
-    /**
-     *  Set up server IP address and port # using env variables/defaults.
-     */
     self.setupVariables = function() {
-        //  Set the environment variables we need.
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
         self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
         self.mongourl = process.env.OPENSHIFT_MONGODB_DB_URL;
-        self.collectionName = "users";
+        self.usersCollectionName = "users";
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
@@ -45,7 +32,7 @@ var moralizer = function() {
             //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_MONGO_DB_URL var, using mongodb://localhost:27017');
             self.mongourl = "mongodb://morality:justicia@ds051110.mongolab.com:51110/automation";
-            self.collectionName = "moralizer.users";
+            self.usersCollectionName = "moralizer.users";
         }
     };
 
@@ -124,6 +111,51 @@ var moralizer = function() {
                 //res.send(self.cache_get('index.html') );
             }
         });
+        self.app.get("/ask", function(req, res){
+            if(req.signedCookies.login==1){
+                res.sendfile("ask.html");
+            }
+            else{
+                res.redirect("/");
+            }
+        });
+        self.app.post("/asksubmit", function(req, res){
+            if(req.signedCookies.login==1){
+                var wordregex =  /(\w){4,}/;
+                var tagregex = /^\w(\s*,?\s*\w)*$/;
+                var sentenceregex = /(\w+\s){4,}\w/;
+                var title = req.body.title;
+                var tags = req.body.tags;
+                var post = req.body.post;
+                if(!wordregex.test(title)){
+                    res.send("Title must be at least four characters long!");
+                }
+                else if(!sentenceregex.test(post)){
+                    res.send("Question must be at least five words long!");
+                }
+                else if(!(tagregex.test(tags) || tags=="")){
+                    res.send("Tags must be separate by commas, and no spaces are allowed (you may use underscore_to denote spaces).");
+                }
+                else{
+                    var askadd = self.users.insert({
+                    uname: req.signedCookies.uname,
+                    title: title,
+                    post: post,
+                    options: req.body.options,
+                    tags: tags
+                    });
+                    askadd.on('success', function () {
+                        res.send("success");
+                    });
+                    askadd.on('failure', function (err) {
+                        res.send(err);
+                    });
+                }
+            }
+            else{
+                res.redirect("/");
+            }
+        });
         self.app.get("/logout" , function(req, res){
             res.clearCookie("login");
             res.clearCookie("uname");
@@ -135,9 +167,8 @@ var moralizer = function() {
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var emailval = email.match(regex);
-            var users = self.db.get(self.collectionName);
-            var checkemails = users.find({email: email});
-            var checkusers = users.find({uname: uname});
+            var checkemails = self.users.find({email: email});
+            var checkusers = self.users.find({uname: uname});
             var emailuse = 1;
             var unameuse = 1;
             checkemails.on('success', function (emails) {
@@ -158,7 +189,7 @@ var moralizer = function() {
                         res.send("Please enter a valid username.");
                     }
                     else {
-                        var adduser = users.insert({
+                        var adduser = self.users.insert({
                             uname: uname,
                             pass: pass,
                             email: email
@@ -176,7 +207,7 @@ var moralizer = function() {
             var uname = req.body.uname;
             var pass = req.body.pass;
             var users = self.db.get(self.collectionName);
-            var checkaccount = users.find({uname: uname, pass: pass});
+            var checkaccount = self.users.find({uname: uname, pass: pass});
             checkaccount.on('success', function (users) {
                 console.log(users);
                 if(users.length==1){
@@ -209,6 +240,7 @@ var moralizer = function() {
         //self.setupMongo();
         // Create the express server and routes.
         self.db = monk(self.mongourl);
+        self.users = self.db.get(self.usersCollectionName);
         self.db.on('complete', function(){console.log("DB connected!")});
         self.db.on('error', function(){console.log("DB Failure")});
         self.initializeServer();

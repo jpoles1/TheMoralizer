@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>The Moralizer - Main</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link rel="stylesheet" href="res/main.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <script type="text/javascript" src="res/jquery-2.1.3.min.js"></script>
+    <script type="text/javascript" src="res/jquery.h5validate.js"></script>
+    <script type="text/javascript" src="res/ask.js"></script>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+</head>
+<body>
+    <div class="header">
+        <div class="home-menu pure-menu pure-menu-horizontal pure-menu-fixed">
+            <a class="pure-menu-heading" href="">Moralizer</a>
+
+            <ul class="pure-menu-list">
+                <li class="pure-menu-item"><a href="/" class="pure-menu-link">Home</a></li>
+                <li class="pure-menu-item pure-menu-selected"><a href="ask" class="pure-menu-link">Ask Moralizer</a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Account</a></li>
+                <li class="pure-menu-item"><a href="logout" class="pure-menu-link">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="content-wrapper">
+        <div class="content">
+            <div class="pure-g" id="main-container">
+                <div class="sidebar pure-u-3-24"></div>
+                <div class="pure-u-18-24">
+                    <div class="entry">
+                        <h1>Want to get ethical?</h1>
+                        <h1>Submit a question!</h1>
+                        <div class="error" style="display: none"></div>
+                        <form class="pure-form pure-form-stacked" id="submitq">
+                            <fieldset class="pure-group">
+                                <input type="text" class="pure-input-1" placeholder="Your title" id="title" required>
+                                <textarea class="pure-input-1" placeholder="Tell us your question!" id="post" required></textarea>
+                            </fieldset>
+                            <h2>What are the options?</h2>
+                            <h4>Try to provide a detailed explanation</h4>
+                            <fieldset id="options">
+                                <div><input type='text' class='pure-input-1 option' placeholder='Option 1' required></div>
+                                <div><input type='text' class='pure-input-1 option' placeholder='Option 2' required></div>
+                            </fieldset>
+                            <button class="button-secondary pure-button" style="width:100%; margin-bottom: 20px;" id="addo">Add Option</button>
+                            <h2>Tag your post (optional):<h2>
+                            <h4>Describe your post to help the community find it, and to categorize the topic of your post for researchers. Separate tags with a comma, no spaces are allowed.</h4>
+                            <textarea class="pure-input-1" placeholder="write,your,tags,here" id="tags"></textarea>
+                            </br>
+                            <div class="g-recaptcha" data-sitekey="6Lc82wQTAAAAACf78hAgAbZh73k6tGpPZwpUfNvc"></div>
+                            </br>
+                            <button class="button-success pure-button" style="margin-bottom: 20px;" id="submit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="sidebar pure-u-3-24"></div>
+            </div>
+        </div>
+        <div class="footer l-box is-center">
+            Created by Jordan Poles. Thanks to JQuery, Font Awesome, and YUI. <a href="https://github.com/jpoles1">https://github.com/jpoles1</a>
+        </div>
+    </div>
+</body>
+</html>
