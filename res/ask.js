@@ -22,9 +22,9 @@ var submitq = function(e){
     var post = $("#post").val();
     var options = [];
     $('#options div').children(".option").each(function() {
-        options.push($(this).val().trim());
+        options.push($(this).val());
     });
-    var tags = $("#tags").val();
+    var tags = $("#tags").val().trim().split(",");
     $.ajax({
         type: "POST",
         url: "asksubmit",

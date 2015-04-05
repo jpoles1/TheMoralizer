@@ -21,6 +21,7 @@ var moralizer = function() {
         self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
         self.mongourl = process.env.OPENSHIFT_MONGODB_DB_URL;
         self.usersCollectionName = "users";
+        self.postsCollectionName = "posts";
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
@@ -34,6 +35,7 @@ var moralizer = function() {
             console.warn('No OPENSHIFT_MONGO_DB_URL var, using mongodb://localhost:27017');
             self.mongourl = "mongodb://morality:justicia@ds051110.mongolab.com:51110/automation";
             self.usersCollectionName = "moralizer.users";
+            self.postsCollectionName = "moralizer.posts";
         }
     };
 
@@ -153,7 +155,7 @@ var moralizer = function() {
                 else{
                     rest.get("https://www.google.com/recaptcha/api/siteverify?secret=6Lc82wQTAAAAABicK2uab_1pP0ZMRdYvdmH81AmC&response="+captcha).on('complete', function(data){
                         if(data.success==true){
-                            var askadd = self.users.insert({
+                            var askadd = self.posts.insert({
                                 uname: req.signedCookies.uname,
                                 title: title,
                                 post: post,
@@ -226,7 +228,6 @@ var moralizer = function() {
         self.app.post("/signin", function(req, res){
             var uname = req.body.uname;
             var pass = req.body.pass;
-            var users = self.db.get(self.collectionName);
             var checkaccount = self.users.find({uname: uname, pass: pass});
             checkaccount.on('success', function (users) {
                 if(users.length==1){
@@ -260,6 +261,7 @@ var moralizer = function() {
         // Create the express server and routes.
         self.db = monk(self.mongourl);
         self.users = self.db.get(self.usersCollectionName);
+        self.posts = self.db.get(self.postsCollectionName);
         self.db.on('complete', function(){console.log("DB connected!")});
         self.db.on('error', function(){console.log("DB Failure")});
         self.initializeServer();
