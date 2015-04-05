@@ -122,6 +122,20 @@ var moralizer = function() {
                 res.redirect("/");
             }
         });
+        self.app.get("/getposts", function(req, res){
+            //numpost = req.body.numpost;
+            var posts = self.posts.find({});
+            var content = "";
+            posts.on('success', function (records){
+                for (i = 0; i < records.length; i++){
+                    content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"</div>";
+                }
+                res.send(content);
+            });
+            posts.on("failure", function(err){
+               console.log(err);
+            });
+        });
         self.app.post("/asksubmit", function(req, res){
             if(req.signedCookies.login==1){
                 var wordregex =  /(\w){4,}/;
