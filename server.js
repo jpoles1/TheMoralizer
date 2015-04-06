@@ -128,13 +128,44 @@ var moralizer = function() {
             var content = "";
             posts.on('success', function (records){
                 for (i = 0; i < records.length; i++){
-                    content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"</div>";
+                    var curopt = records[i].options;
+                    var optinputs = "";
+                    for(j=0; j<curopt.length; j++){
+                        optinputs = optinputs+"<a class='pure-button button-secondary' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
+                    }
+                    optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
+                    content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
                 }
                 res.send(content);
             });
             posts.on("failure", function(err){
                console.log(err);
             });
+        });
+        self.app.post("/votesubmit", function(req, res){
+            if(req.signedCookies.login==1){
+                var choice = req.body.choice;
+                var qid = req.body.qid;
+                var uname = req.signedCookies.uname;
+                var increaser = {}
+                increaser["choice.opt"+choice]=1;
+                console.log(increaser);
+                var respadd = {};
+                respadd[uname] = choice;
+                var vote = self.posts.updateById(
+                   qid,
+                   {$inc: increaser}
+                );
+                vote.on('success', function () {
+                    res.send("success");
+                });
+                vote.on('failure', function (err) {
+                    res.send(err);
+                });
+            }
+            else{
+                res.redirect("/");
+            }
         });
         self.app.post("/asksubmit", function(req, res){
             if(req.signedCookies.login==1){
@@ -169,12 +200,15 @@ var moralizer = function() {
                 else{
                     rest.get("https://www.google.com/recaptcha/api/siteverify?secret=6Lc82wQTAAAAABicK2uab_1pP0ZMRdYvdmH81AmC&response="+captcha).on('complete', function(data){
                         if(data.success==true){
+                            var counts = []
                             var askadd = self.posts.insert({
                                 uname: req.signedCookies.uname,
                                 title: title,
                                 post: post,
                                 options: opt,
-                                tags: tags
+                                tags: tags,
+                                resp: [],
+                                counts: {}
                             });
                             askadd.on('success', function () {
                                 res.send("success");
