@@ -149,18 +149,23 @@ var moralizer = function() {
                 var uname = req.signedCookies.uname;
                 var increaser = {}
                 increaser["choice.opt"+choice]=1;
-                console.log(increaser);
                 var respadd = {};
                 respadd[uname] = choice;
                 var vote = self.posts.updateById(
                    qid,
-                   {$inc: increaser}
+                   {$inc: increaser, $addToSet: {resp: respadd}}
                 );
                 vote.on('success', function () {
-                    res.send("success");
+                    var updateuser = self.users.update({uname: uname}, {$addToSet: {votes: qid}});
+                    updateuser.on("success", function(){
+                        res.send("success");
+                    });
+                    updateuser.on("failure", function(err){
+                        res.send("Failed to update user: "+err);
+                    });
                 });
                 vote.on('failure', function (err) {
-                    res.send(err);
+                    res.send("Failed to update post: "+err);
                 });
             }
             else{
@@ -237,12 +242,13 @@ var moralizer = function() {
             var uname = req.body.uname;
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            var unameregex = /^(\w)*$/;
             var emailval = email.match(regex);
             var checkemails = self.users.find({email: email});
             var checkusers = self.users.find({uname: uname});
             var emailuse = 1;
             var unameuse = 1;
-            checkemails.on('success', function (emails) {
+            checkemails.on('success', function (emails){
                 emailuse = emails.length;
                 checkusers.on('success', function (userlist) {
                     unameuse = userlist.length;
@@ -251,6 +257,9 @@ var moralizer = function() {
                     }
                     else if (emailuse > 0) {
                         res.send("Email is already associated with another account.")
+                    }
+                    else if(!unameregex.test(uname)){
+                        res.send("Username must be one word (no spaces).");
                     }
                     else if (unameuse > 0) {
                         res.send("Username is already associated with another account.")
