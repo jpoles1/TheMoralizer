@@ -12,8 +12,7 @@ var Keygrip = require('keygrip');
 //Pass encryption
 var md5 = require('MD5');
 //Setup DB
-var mongo = require('mongodb');
-var monk = require('monk');
+var mongoose = require('mongoose');
 var moralizer = function() {
     var self = this;
     self.setupVariables = function() {
@@ -99,6 +98,32 @@ var moralizer = function() {
      *  Initialize the server (express) and create the routes and register
      *  the handlers.
      */
+    self.setupMongoose = function(){
+        mongoose.connect(self.mongourl);
+        self.db = mongoose.connection;
+        self.db.on('error', console.error.bind(console, 'connection error:'));
+        self.db.once('open', function (callback) {
+            var userSchema = mongoose.Schema({
+                uname: String,
+                pass: String,
+                email: String,
+                votes: [String]
+            });
+            userSchema.pre("save", function(next){
+
+            });
+            self.User = mongoose.model('mong.users', userSchema);
+            var postSchema = mongoose.Schema({
+                uname: String,
+                title: String,
+                post: String,
+                options: [String],
+                tags: [String],
+                counts: []
+            });
+            self.Post = mongoose.model('mong.posts', postSchema);
+        });
+    }
     self.initializeServer = function() {
         self.app = express();
         self.app.use(bodyparser.urlencoded({extended: false}));
@@ -244,15 +269,16 @@ var moralizer = function() {
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var unameregex = /^(\w)*$/;
             var emailval = email.match(regex);
-            var checkemails = self.users.find({email: email});
-            var checkusers = self.users.find({uname: uname});
             var emailuse = 1;
             var unameuse = 1;
-            checkemails.on('success', function (emails){
+            self.User.find({email: email} function (eerr, emails){
                 emailuse = emails.length;
-                checkusers.on('success', function (userlist) {
+                self.User.find({uname: uname}, function (uerr, userlist) {
                     unameuse = userlist.length;
-                    if (emailval == null) {
+                    if(uerr){
+                        res.send("Invalid email");
+                    }
+                    else if (emailval == null) {
                         res.send("Invalid email");
                     }
                     else if (emailuse > 0) {
@@ -268,15 +294,24 @@ var moralizer = function() {
                         res.send("Please enter a valid username.");
                     }
                     else {
-                        var adduser = self.users.insert({
+                        var newuser = new self.User({
                             uname: uname,
                             pass: pass,
-                            email: email
+                            email: email,
+                            votes: []
+                        });
+                        newuser.save(function (err) {
+                            if(err){
+                                res.send(err);
+                            }
+                            else{
+                                res.cookie('login', 1, { signed: true });
+                                res.cookie('uname', uname, { signed: true });
+                                res.send("success");
+                            }
                         });
                         adduser.on('success', function () {
-                            res.cookie('login', 1, { signed: true });
-                            res.cookie('uname', uname, { signed: true });
-                            res.send("success");
+
                         });
                     }
                 });
@@ -314,13 +349,7 @@ var moralizer = function() {
         self.setupVariables();
         self.populateCache();
         self.setupTerminationHandlers();
-        //self.setupMongo();
-        // Create the express server and routes.
-        self.db = monk(self.mongourl);
-        self.users = self.db.get(self.usersCollectionName);
-        self.posts = self.db.get(self.postsCollectionName);
-        self.db.on('complete', function(){console.log("DB connected!")});
-        self.db.on('error', function(){console.log("DB Failure")});
+        self.setupMongoose();
         self.initializeServer();
     };
 
