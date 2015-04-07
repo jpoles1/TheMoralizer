@@ -109,10 +109,38 @@ var moralizer = function() {
                 email: String,
                 votes: [String]
             });
-            userSchema.pre("save", function(next){
-
-            });
             self.User = mongoose.model('mong.users', userSchema);
+            userSchema.pre("save", function(next){
+                userdat = this;
+                var emailregex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+                var unameregex = /(\w){3,}/
+                self.User.findOne({$or:[{uname: userdat.uname}, {email: userdat.email}]}, function (err, existuser){
+                    var signuperr;
+                    if(err){
+                        next(new Error(err));
+                    }
+                    else if (!emailregex.test(userdat.email)) {
+                        next(new Error("Invalid email"));
+                    }
+                    else if(existuser){
+                        if (userdat.email == existuser.email) {
+                            next(new Error("Email is already associated with another account."));
+                        }
+                        else if (userdat.uname == existuser.uname) {
+                            next(new Error("Username is already associated with another account."));
+                        }
+                    }
+                    else if(!unameregex.test(userdat.uname)){
+                        next(new Error("Username must be one word (no spaces)."));
+                    }
+                    else if (userdat.uname.length < 2) {
+                         next(new Error("Please enter a valid username."));
+                    }
+                    else{
+                        next();
+                    }
+                });
+            });
             var postSchema = mongoose.Schema({
                 uname: String,
                 title: String,
@@ -149,7 +177,7 @@ var moralizer = function() {
         });
         self.app.get("/getposts", function(req, res){
             //numpost = req.body.numpost;
-            var posts = self.posts.find({});
+            var posts = self.Post.find({});
             var content = "";
             posts.on('success', function (records){
                 for (i = 0; i < records.length; i++){
@@ -263,58 +291,30 @@ var moralizer = function() {
             res.redirect("/");
         });
         self.app.post("/signup", function (req, res) {
-            var email = req.body.email;
-            var uname = req.body.uname;
+            var email = req.body.email.toLowerCase();
+            var uname = req.body.uname.toLowerCase();
             var pass = req.body.pass;
             var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var unameregex = /^(\w)*$/;
             var emailval = email.match(regex);
             var emailuse = 1;
             var unameuse = 1;
-            self.User.find({email: email} function (eerr, emails){
-                emailuse = emails.length;
-                self.User.find({uname: uname}, function (uerr, userlist) {
-                    unameuse = userlist.length;
-                    if(uerr){
-                        res.send("Invalid email");
-                    }
-                    else if (emailval == null) {
-                        res.send("Invalid email");
-                    }
-                    else if (emailuse > 0) {
-                        res.send("Email is already associated with another account.")
-                    }
-                    else if(!unameregex.test(uname)){
-                        res.send("Username must be one word (no spaces).");
-                    }
-                    else if (unameuse > 0) {
-                        res.send("Username is already associated with another account.")
-                    }
-                    else if (uname.length < 2) {
-                        res.send("Please enter a valid username.");
-                    }
-                    else {
-                        var newuser = new self.User({
-                            uname: uname,
-                            pass: pass,
-                            email: email,
-                            votes: []
-                        });
-                        newuser.save(function (err) {
-                            if(err){
-                                res.send(err);
-                            }
-                            else{
-                                res.cookie('login', 1, { signed: true });
-                                res.cookie('uname', uname, { signed: true });
-                                res.send("success");
-                            }
-                        });
-                        adduser.on('success', function () {
-
-                        });
-                    }
-                });
+            var newuser = new self.User({
+                uname: uname,
+                pass: pass,
+                email: email,
+                votes: []
+            });
+            newuser.save(function(err) {
+                if(err){
+                    console.log(err);
+                    res.send(err.toString());
+                }
+                else{
+                    res.cookie('login', 1, { signed: true });
+                    res.cookie('uname', uname, { signed: true });
+                    res.send("success");
+                }
             });
         });
         self.app.post("/signin", function(req, res){
