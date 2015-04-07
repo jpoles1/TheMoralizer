@@ -111,7 +111,7 @@ var moralizer = function() {
             });
             self.User = mongoose.model('mong.users', userSchema);
             userSchema.pre("save", function(next){
-                userdat = this;
+                var userdat = this;
                 var emailregex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
                 var unameregex = /(\w){3,}/
                 self.User.findOne({$or:[{uname: userdat.uname}, {email: userdat.email}]}, function (err, existuser){
@@ -146,10 +146,53 @@ var moralizer = function() {
                 title: String,
                 post: String,
                 options: [String],
-                tags: [String],
+                tags: [],
                 counts: []
             });
+            //postSchema.virtual('captcha').get(function(){return this.captcha}).set(function(name){this.captcha=name;});
             self.Post = mongoose.model('mong.posts', postSchema);
+            postSchema.pre("save", function(next){
+                var postdat = this;
+                var wordregex =  /(\w){4,}/;
+                var tagregex = /^\w(\s*,?\s*\w)*$/;
+                var sentenceregex = /(\w+\s){4,}\w/;
+                var optionregex = /\w+/;
+                var validoptions = 0;
+                if(postdat.options){
+                    for (i = 0; i < postdat.options.length; i++) {
+                        if(optionregex.test(postdat.options[i])==true){
+                            validoptions++;
+                        }
+                    }
+                }
+                if(!wordregex.test(postdat.title)){
+                    next(new Error("Title must be at least four characters long!"));
+                }
+                else if(!sentenceregex.test(postdat.post)){
+                    next(new Error("Question must be at least five words long!"));
+                }
+                else if(!postdat.options){
+                    next(new Error("Please submit at least two valid options"));
+                }
+                else if(validoptions!=postdat.options.length){
+                    next(new Error("Please submit at least "+postdat.options.length+" valid options (at least two words)!"));
+                }
+                else if(!(tagregex.test(postdat.tags) || postdat.tags=="")){
+                    next(new Error("Tags must be separate by commas, and no spaces are allowed (you may use underscore_to denote spaces)."));
+                }
+                else{
+                    console.log(postdat.captcha);
+                    rest.get("https://www.google.com/recaptcha/api/siteverify?secret=6Lc82wQTAAAAABicK2uab_1pP0ZMRdYvdmH81AmC&response="+postdat.captcha).on('complete', function(data){
+                        if(data.success==true){
+                            next();
+                        }
+                        else{
+                            next(new Error("Captcha Failed to Validate"));
+                        }
+
+                    });
+                }
+            });
         });
     }
     self.initializeServer = function() {
@@ -177,22 +220,23 @@ var moralizer = function() {
         });
         self.app.get("/getposts", function(req, res){
             //numpost = req.body.numpost;
-            var posts = self.Post.find({});
             var content = "";
-            posts.on('success', function (records){
-                for (i = 0; i < records.length; i++){
-                    var curopt = records[i].options;
-                    var optinputs = "";
-                    for(j=0; j<curopt.length; j++){
-                        optinputs = optinputs+"<a class='pure-button button-secondary' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
+            self.Post.find({},function (err, records){
+                if(records && !err){
+                    for (i = 0; i < records.length; i++){
+                        var curopt = records[i].options;
+                        var optinputs = "";
+                        for(j=0; j<curopt.length; j++){
+                            optinputs = optinputs+"<a class='pure-button button-secondary' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
+                        }
+                        optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
+                        content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
                     }
-                    optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
-                    content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
+                    res.send(content);
                 }
-                res.send(content);
-            });
-            posts.on("failure", function(err){
-               console.log(err);
+                else{
+                    res.send("<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>Could not find any content for you right now <i class='fa fa-frown-o fa-1x'></i></h1></div>");
+                }
             });
         });
         self.app.post("/votesubmit", function(req, res){
@@ -227,59 +271,31 @@ var moralizer = function() {
         });
         self.app.post("/asksubmit", function(req, res){
             if(req.signedCookies.login==1){
-                var wordregex =  /(\w){4,}/;
-                var tagregex = /^\w(\s*,?\s*\w)*$/;
-                var sentenceregex = /(\w+\s){4,}\w/;
-                var optionregex = /\w+/;
                 var formdata = JSON.parse(req.body.dat);
                 var title = formdata.title;
                 var tags = formdata.tags;
                 var post = formdata.post;
                 var opt = formdata.opt;
                 var captcha = formdata.captcha;
-                var validoptions = 0;
-                for (i = 0; i < opt.length; i++) {
-                    if(optionregex.test(opt[i])==true){
-                        validoptions++;
+                var askadd = self.Post({
+                    uname: req.signedCookies.uname,
+                    title: title,
+                    post: post,
+                    options: opt,
+                    tags: tags,
+                    resp: [],
+                    counts: {},
+                });
+                askadd.captcha = captcha;
+                askadd.save(function(err){
+                    if(err){
+                        console.log(err);
+                        res.send(err.toString());
                     }
-                }
-                if(!wordregex.test(title)){
-                    res.send("Title must be at least four characters long!");
-                }
-                else if(!sentenceregex.test(post)){
-                    res.send("Question must be at least five words long!");
-                }
-                else if(validoptions!=opt.length){
-                    res.send("Please submit at least "+opt.length+" valid options (at least two words)!");
-                }
-                else if(!(tagregex.test(tags) || tags=="")){
-                    res.send("Tags must be separate by commas, and no spaces are allowed (you may use underscore_to denote spaces).");
-                }
-                else{
-                    rest.get("https://www.google.com/recaptcha/api/siteverify?secret=6Lc82wQTAAAAABicK2uab_1pP0ZMRdYvdmH81AmC&response="+captcha).on('complete', function(data){
-                        if(data.success==true){
-                            var counts = []
-                            var askadd = self.posts.insert({
-                                uname: req.signedCookies.uname,
-                                title: title,
-                                post: post,
-                                options: opt,
-                                tags: tags,
-                                resp: [],
-                                counts: {}
-                            });
-                            askadd.on('success', function () {
-                                res.send("success");
-                            });
-                            askadd.on('failure', function (err) {
-                                res.send(err);
-                            });
-                        }
-                        else{
-                            res.send("CAPTCHA FAILED!");
-                        }
-                    });
-                }
+                    else{
+                        res.send("success");
+                    }
+                });
             }
             else{
                 res.redirect("/");
@@ -320,9 +336,8 @@ var moralizer = function() {
         self.app.post("/signin", function(req, res){
             var uname = req.body.uname;
             var pass = req.body.pass;
-            var checkaccount = self.users.find({uname: uname, pass: pass});
-            checkaccount.on('success', function (users) {
-                if(users.length==1){
+            self.User.findOne({uname: uname, pass: pass}, function (err, users) {
+                if(users){
                     res.cookie('uname', uname, { signed: true });
                     res.cookie('login', 1, { signed: true });
                     res.send("correct");
