@@ -147,7 +147,8 @@ var moralizer = function() {
                 post: String,
                 options: [String],
                 tags: [],
-                counts: []
+                counts: {},
+                resp: {}
             });
             //postSchema.virtual('captcha').get(function(){return this.captcha}).set(function(name){this.captcha=name;});
             self.Post = mongoose.model('mong.posts', postSchema);
@@ -245,24 +246,25 @@ var moralizer = function() {
                 var qid = req.body.qid;
                 var uname = req.signedCookies.uname;
                 var increaser = {}
-                increaser["choice.opt"+choice]=1;
+                increaser["counts.opt"+choice]=1;
                 var respadd = {};
-                respadd[uname] = choice;
-                var vote = self.posts.updateById(
-                   qid,
-                   {$inc: increaser, $addToSet: {resp: respadd}}
-                );
-                vote.on('success', function () {
-                    var updateuser = self.users.update({uname: uname}, {$addToSet: {votes: qid}});
-                    updateuser.on("success", function(){
-                        res.send("success");
-                    });
-                    updateuser.on("failure", function(err){
-                        res.send("Failed to update user: "+err);
-                    });
-                });
-                vote.on('failure', function (err) {
-                    res.send("Failed to update post: "+err);
+                respadd["resp."+uname] = choice;
+                var updater = {$inc: increaser, $set: respadd};
+                console.log(updater);
+                var vote = self.Post.findByIdAndUpdate(qid, updater, function (err){
+                    if(err){
+                        res.send("Failed to update post: "+err);
+                    }
+                    else{
+                        var updateuser = self.User.update({uname: uname}, {$addToSet: {votes: qid}}, function(err){
+                            if(err){
+                                res.send("Failed to update user: "+err);
+                            }
+                            else{
+                                res.send("success");
+                            }
+                        });
+                    }
                 });
             }
             else{
@@ -283,7 +285,7 @@ var moralizer = function() {
                     post: post,
                     options: opt,
                     tags: tags,
-                    resp: [],
+                    resp: {},
                     counts: {},
                 });
                 askadd.captcha = captcha;
