@@ -1,7 +1,16 @@
 $(function(){
     var pathname = window.location.pathname;
-    console.log(pathname);
     var type = pathname.split('/')[1];
+    console.log(type);
+    if(type=="yourv"){
+        $("#yourvlink").addClass("pure-menu-selected");
+    }
+    else if(type=="yourq"){
+        $("#yourqlink").addClass("pure-menu-selected");
+    }
+    else{
+        $("#homelink").addClass("pure-menu-selected");
+    }
     $.get("/getposts/"+type, function(resp){
         $("#post-container").html(resp);
         $(".optionform").children(".button-secondary").bind( "click", function(){

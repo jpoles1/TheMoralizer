@@ -236,24 +236,24 @@ var moralizer = function() {
             }
         });
         self.app.get("/getposts*", function(req, res){
-            var mode = req.url.split("/")[2];
-            console.log(mode);
             if(req.signedCookies.login==1){
+                var mode = req.url.split("/")[2].trim();
+                console.log(mode);
                 //numpost = req.body.numpost;
                 var content = "";
-                var mode = "main";
                 var query;
                 var minposts = 15;
-                if(!mode){
-
-                }
-                else if(mode=="yourq"){
-                    query = {};
-                    query["resp."+req.signedCookies.uname] = {$exists: true};
+                if(mode=="yourq"){
+                    query = {uname: req.signedCookies.uname};
                 }
                 else if(mode=="yourv"){
                     query = {};
+                    query["resp."+req.signedCookies.uname] = {$exists: true};
+                }
+                else{
+                    query = {};
                     query["resp."+req.signedCookies.uname] = {$exists: false};
+                    mode = "main";
                 }
                 self.Post.find(query,function (err, records){
                     if(err){
@@ -261,20 +261,37 @@ var moralizer = function() {
                     }
                     else{
                         for (i = 0; i < records.length; i++){
+                            var myresponse;
+                            try{
+                                 myresponse = records[i].resp[req.signedCookies.uname];
+                            }
+                            catch(err){
+                                myresponse = "Nope";
+                            }
+                            console.log(myresponse);
                             var curopt = records[i].options;
                             var optinputs = "";
                             for(j=0; j<curopt.length; j++){
-                                optinputs = optinputs+"<a class='pure-button button-secondary' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
+                                var butclass = "button-secondary";
+                                if(myresponse==j){
+                                    console.log("found");
+                                    butclass = butclass+" pure-button-selected";
+                                }
+                                optinputs = optinputs+"<a class='pure-button "+butclass+"' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
                             }
-                            optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
-                            content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
+                            var formclass= "selectedform";
+                            if(isNaN(myresponse)){
+                                optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
+                                formclass="optionform";
+                            }
+                            content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3 style='text-align: right; margin-top: -30px;'>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='"+formclass+"'>"+optinputs+"</form></div>";
                         }
                         if(records.length<minposts){
-                            content = content+"<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>No more poops! <i class='fa fa-frown-o fa-1x'></i></h1></div>";
+                            content = content+"<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>No more posts! <i class='fa fa-frown-o fa-1x'></i></h1></div>";
                         }
                         res.send(content);
                     }
-                }).limit(25);
+                }).limit(25).sort({_id: -1});
             }
             else{
                 res.redirect("/");
