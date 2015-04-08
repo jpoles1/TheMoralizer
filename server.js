@@ -220,25 +220,40 @@ var moralizer = function() {
             }
         });
         self.app.get("/getposts", function(req, res){
-            //numpost = req.body.numpost;
-            var content = "";
-            self.Post.find({},function (err, records){
-                if(records && !err){
-                    for (i = 0; i < records.length; i++){
-                        var curopt = records[i].options;
-                        var optinputs = "";
-                        for(j=0; j<curopt.length; j++){
-                            optinputs = optinputs+"<a class='pure-button button-secondary' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
-                        }
-                        optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
-                        content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
+            if(req.signedCookies.login==1){
+                //numpost = req.body.numpost;
+                var content = "";
+                var mode = "main";
+                var query;
+                var minposts = 15;
+                if(mode=="main"){
+                    query = {};
+                    query["resp."+req.signedCookies.uname] = {$exists: false};
+                }
+                self.Post.find(query,function (err, records){
+                    if(err){
+                        res.send("<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>Error fetching content! Hope to be back soon! <i class='fa fa-frown-o fa-1x'></i></br>"+err+"</h1></div>");
                     }
-                    res.send(content);
-                }
-                else{
-                    res.send("<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>Could not find any content for you right now <i class='fa fa-frown-o fa-1x'></i></h1></div>");
-                }
-            });
+                    else{
+                        for (i = 0; i < records.length; i++){
+                            var curopt = records[i].options;
+                            var optinputs = "";
+                            for(j=0; j<curopt.length; j++){
+                                optinputs = optinputs+"<a class='pure-button button-secondary' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
+                            }
+                            optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
+                            content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
+                        }
+                        if(records.length<minposts){
+                            content = content+"<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>No more posts! <i class='fa fa-frown-o fa-1x'></i></h1></div>";
+                        }
+                        res.send(content);
+                    }
+                }).limit(25);
+            }
+            else{
+                res.redirect("/");
+            }
         });
         self.app.post("/votesubmit", function(req, res){
             if(req.signedCookies.login==1){
@@ -286,7 +301,7 @@ var moralizer = function() {
                     options: opt,
                     tags: tags,
                     resp: {},
-                    counts: {},
+                    counts: {}
                 });
                 askadd.captcha = captcha;
                 askadd.save(function(err){
