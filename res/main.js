@@ -1,5 +1,8 @@
 $(function(){
-    $.get("/getposts", function(resp){
+    var pathname = window.location.pathname;
+    console.log(pathname);
+    var type = pathname.split('/')[1];
+    $.get("/getposts/"+type, function(resp){
         $("#post-container").html(resp);
         $(".optionform").children(".button-secondary").bind( "click", function(){
             $(this).siblings(".pure-button-selected").removeClass("pure-button-selected");

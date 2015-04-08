@@ -219,14 +219,39 @@ var moralizer = function() {
                 res.redirect("/");
             }
         });
-        self.app.get("/getposts", function(req, res){
+        self.app.get("/yourq", function(req, res){
+            if(req.signedCookies.login==1){
+                res.sendfile("main.html");
+            }
+            else{
+                res.redirect("/");
+            }
+        });
+        self.app.get("/yourv", function(req, res){
+            if(req.signedCookies.login==1){
+                res.sendfile("main.html");
+            }
+            else{
+                res.redirect("/");
+            }
+        });
+        self.app.get("/getposts*", function(req, res){
+            var mode = req.url.split("/")[2];
+            console.log(mode);
             if(req.signedCookies.login==1){
                 //numpost = req.body.numpost;
                 var content = "";
                 var mode = "main";
                 var query;
                 var minposts = 15;
-                if(mode=="main"){
+                if(!mode){
+
+                }
+                else if(mode=="yourq"){
+                    query = {};
+                    query["resp."+req.signedCookies.uname] = {$exists: true};
+                }
+                else if(mode=="yourv"){
                     query = {};
                     query["resp."+req.signedCookies.uname] = {$exists: false};
                 }
@@ -245,7 +270,7 @@ var moralizer = function() {
                             content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='optionform'>"+optinputs+"</form></div>";
                         }
                         if(records.length<minposts){
-                            content = content+"<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>No more posts! <i class='fa fa-frown-o fa-1x'></i></h1></div>";
+                            content = content+"<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>No more poops! <i class='fa fa-frown-o fa-1x'></i></h1></div>";
                         }
                         res.send(content);
                     }
