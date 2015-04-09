@@ -107,7 +107,9 @@ var moralizer = function() {
                 uname: String,
                 pass: String,
                 email: String,
-                votes: [String]
+                votes: [String],
+                ethos: Number,
+                logos: Number
             });
             self.User = mongoose.model('mong.users', userSchema);
             userSchema.pre("save", function(next){
@@ -182,7 +184,6 @@ var moralizer = function() {
                     next(new Error("Tags must be separate by commas, and no spaces are allowed (you may use underscore_to denote spaces)."));
                 }
                 else{
-                    console.log(postdat.captcha);
                     rest.get("https://www.google.com/recaptcha/api/siteverify?secret=6Lc82wQTAAAAABicK2uab_1pP0ZMRdYvdmH81AmC&response="+postdat.captcha).on('complete', function(data){
                         if(data.success==true){
                             next();
@@ -238,7 +239,6 @@ var moralizer = function() {
         self.app.get("/getposts*", function(req, res){
             if(req.signedCookies.login==1){
                 var mode = req.url.split("/")[2].trim();
-                console.log(mode);
                 //numpost = req.body.numpost;
                 var content = "";
                 var query;
@@ -268,7 +268,6 @@ var moralizer = function() {
                             catch(err){
                                 myresponse = "Nope";
                             }
-                            console.log(myresponse);
                             var curopt = records[i].options;
                             var optinputs = "";
                             for(j=0; j<curopt.length; j++){
@@ -308,17 +307,25 @@ var moralizer = function() {
                 respadd["resp."+uname] = choice;
                 var updater = {$inc: increaser, $set: respadd};
                 console.log(updater);
-                var vote = self.Post.findByIdAndUpdate(qid, updater, function (err){
+                self.Post.findByIdAndUpdate(qid, updater, function (err, post){
                     if(err){
                         res.send("Failed to update post: "+err);
                     }
                     else{
-                        var updateuser = self.User.update({uname: uname}, {$addToSet: {votes: qid}}, function(err){
+                        self.User.update({uname: req.signedCookies.uname}, {$addToSet: {votes: qid}}, function(err){
                             if(err){
-                                res.send("Failed to update user: "+err);
+                                res.send("Failed to update your user profile: "+err);
                             }
                             else{
-                                res.send("success");
+                                console.log(post);
+                                self.User.update({uname: post.uname}, {$inc: {ethos: 1}}, function(err){
+                                    if(err){
+                                        res.send("Failed to update poster's profile: "+err);
+                                    }
+                                    else{
+                                        res.send("success");
+                                    }
+                                });
                             }
                         });
                     }

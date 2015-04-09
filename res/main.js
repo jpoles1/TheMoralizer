@@ -20,23 +20,23 @@ $(function(){
         $(".optionform").children(".button-success").click(function(){
             var subbutton = $(this);
             var choice = $(this).parent().children(".pure-button-selected").attr("optnum");
-            var qid = $(this).parent().attr("id");
-            $.ajax({
-                type: "POST",
-                url: "votesubmit",
-                data: {qid: qid, choice: choice},
-                success: function(resp){
-                    alert(resp);
-                    if(resp=="success"){
-                        alert("TEST");
-                        subbutton.siblings(".button-secondary").unbind();
-                        subbutton.remove();
+            if(!isNaN(choice)){
+                var qid = $(this).parent().attr("id");
+                $.ajax({
+                    type: "POST",
+                    url: "votesubmit",
+                    data: {qid: qid, choice: choice},
+                    success: function(resp){
+                        if(resp=="success"){
+                            subbutton.siblings(".button-secondary").unbind();
+                            subbutton.remove();
+                        }
+                        else{
+                            alert("Failed: "+resp);
+                        }
                     }
-                    else{
-                        alert("Failed");
-                    }
-                }
-            });
+                });
+            }
         });
     });
 });
