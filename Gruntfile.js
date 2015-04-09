@@ -2,7 +2,10 @@ module.exports = function(grunt) {
     grunt.initConfig({
         nodemon: {
           dev: {
-            script: 'server.js'
+            script: 'server.js',
+	    options: {
+		watch: ['user.js']
+	    }
           }
         }
     });

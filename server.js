@@ -103,46 +103,7 @@ var moralizer = function() {
         self.db = mongoose.connection;
         self.db.on('error', console.error.bind(console, 'connection error:'));
         self.db.once('open', function (callback) {
-            var userSchema = mongoose.Schema({
-                uname: String,
-                pass: String,
-                email: String,
-                votes: [String],
-                ethos: Number,
-                logos: Number
-            });
-            self.User = mongoose.model('mong.users', userSchema);
-            userSchema.pre("save", function(next){
-                var userdat = this;
-                var emailregex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
-                var unameregex = /(\w){3,}/
-                self.User.findOne({$or:[{uname: userdat.uname}, {email: userdat.email}]}, function (err, existuser){
-                    var signuperr;
-                    if(err){
-                        next(new Error(err));
-                    }
-                    else if (!emailregex.test(userdat.email)) {
-                        next(new Error("Invalid email"));
-                    }
-                    else if(existuser){
-                        if (userdat.email == existuser.email) {
-                            next(new Error("Email is already associated with another account."));
-                        }
-                        else if (userdat.uname == existuser.uname) {
-                            next(new Error("Username is already associated with another account."));
-                        }
-                    }
-                    else if(!unameregex.test(userdat.uname)){
-                        next(new Error("Username must be one word (no spaces)."));
-                    }
-                    else if (userdat.uname.length < 2) {
-                         next(new Error("Please enter a valid username."));
-                    }
-                    else{
-                        next();
-                    }
-                });
-            });
+            self.User = require("./user.js");
             var postSchema = mongoose.Schema({
                 uname: String,
                 title: String,
@@ -273,7 +234,6 @@ var moralizer = function() {
                             for(j=0; j<curopt.length; j++){
                                 var butclass = "button-secondary";
                                 if(myresponse==j){
-                                    console.log("found");
                                     butclass = butclass+" pure-button-selected";
                                 }
                                 optinputs = optinputs+"<a class='pure-button "+butclass+"' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
@@ -306,9 +266,8 @@ var moralizer = function() {
                 var respadd = {};
                 respadd["resp."+uname] = choice;
                 var updater = {$inc: increaser, $set: respadd};
-                console.log(updater);
                 self.Post.findByIdAndUpdate(qid, updater, function (err, post){
-                    if(err){
+                    if(err || !post){
                         res.send("Failed to update post: "+err);
                     }
                     else{
@@ -317,7 +276,6 @@ var moralizer = function() {
                                 res.send("Failed to update your user profile: "+err);
                             }
                             else{
-                                console.log(post);
                                 self.User.update({uname: post.uname}, {$inc: {ethos: 1}}, function(err){
                                     if(err){
                                         res.send("Failed to update poster's profile: "+err);
