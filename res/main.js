@@ -17,6 +17,9 @@ $(function(){
             $(this).siblings(".pure-button-selected").removeClass("pure-button-selected");
             $(this).addClass("pure-button-selected");
         });
+        $('.progress').children('.tooltip').tooltipster({
+            position: "bottom"
+        });
         $(".optionform").children(".button-success").click(function(){
             var subbutton = $(this);
             var choice = $(this).parent().children(".pure-button-selected").attr("optnum");

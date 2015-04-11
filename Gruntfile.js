@@ -3,9 +3,9 @@ module.exports = function(grunt) {
         nodemon: {
           dev: {
             script: 'server.js',
-	    options: {
-		watch: ['user.js']
-	    }
+            options: {
+                watch: ['server.js', 'user.js', 'post.js']
+            }
           }
         }
     });

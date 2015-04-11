@@ -198,7 +198,7 @@ var moralizer = function() {
                                 if(!isNaN(myresponse)){
                                     console.log(parseInt(chcounts[j])/total);
                                     var fract = parseInt(chcounts[j]*100/total);
-                                    progbar = progbar + "<div class='progress-bar' role='progressbar' aria-valuenow='60' aria-valuemin='0' aria-valuemax='100' style='border: 1px solid black; background-color:"+colorpallate[j]+";width: "+fract+"%;'>#"+parseInt(j+1)+" - "+fract+"%</div>";
+                                    progbar = progbar + "<div class='progress-bar tooltip' title='"+curopt[j]+"' role='progressbar' aria-valuenow='60' aria-valuemin='0' aria-valuemax='100' style='border: 1px solid black; background-color:"+colorpallate[j]+";width: "+fract+"%;'>#"+parseInt(j+1)+" - "+fract+"%</div>";
                                 }
                             }
                             var formclass= "selectedform";
