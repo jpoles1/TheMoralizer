@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var rest = require('restler');
 
 var postSchema = mongoose.Schema({
     uname: String,

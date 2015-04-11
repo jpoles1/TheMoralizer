@@ -1,6 +1,5 @@
 #!/bin/env node
 //  OpenShift sample Node application
-var rest = require('restler');
 var express = require('express');
 var http = require("http");
 var https = require('https');
@@ -179,20 +178,39 @@ var moralizer = function() {
                                 myresponse = "Nope";
                             }
                             var curopt = records[i].options;
+                            var choices = records[i].counts;
                             var optinputs = "";
+                            var progbar = "";
+                            var total = 0;
+                            var chcounts = [];
+                            var colorpallate = ['#303E73', '#442F74', '#829DFF', '#A780FF', '#5064AD', '#6C4FAF', '#151D3A', '#20153A', '#000000'];
+                            for(var k in choices){
+                                total = total+ parseInt(records[i].counts[k]);
+                                chcounts.push(records[i].counts[k]);
+                            }
+                            console.log(total);
                             for(j=0; j<curopt.length; j++){
                                 var butclass = "button-secondary";
                                 if(myresponse==j){
                                     butclass = butclass+" pure-button-selected";
                                 }
-                                optinputs = optinputs+"<a class='pure-button "+butclass+"' style='width: 100%; margin-top:15px;' optnum='"+j+"'>"+curopt[j]+"</a>"
+                                optinputs = optinputs+"<a class='pure-button "+butclass+"' style='width: 100%; margin-top:15px;' optnum='"+j+"'>#"+parseInt(j+1)+" - "+curopt[j]+"</a>"
+                                if(!isNaN(myresponse)){
+                                    console.log(parseInt(chcounts[j])/total);
+                                    var fract = parseInt(chcounts[j]*100/total);
+                                    progbar = progbar + "<div class='progress-bar' role='progressbar' aria-valuenow='60' aria-valuemin='0' aria-valuemax='100' style='border: 1px solid black; background-color:"+colorpallate[j]+";width: "+fract+"%;'>#"+parseInt(j+1)+" - "+fract+"%</div>";
+                                }
                             }
                             var formclass= "selectedform";
                             if(isNaN(myresponse)){
                                 optinputs = optinputs+"<a class='pure-button button-success' style='width: 100%; margin-top:15px;' optnum='submit'>Submit</a>"
                                 formclass="optionform";
                             }
-                            content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3 style='text-align: right; margin-top: -30px;'>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='"+formclass+"'>"+optinputs+"</form></div>";
+                            else{
+                                formclass="doneform";
+                                progbar = "</br><div class='progress'>"+progbar+"</div>";
+                            }
+                            content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3 style='text-align: right; margin-top: -30px;'>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='"+formclass+"'>"+optinputs+"</form>"+progbar+"</div>";
                         }
                         if(records.length<minposts){
                             content = content+"<div class='entry' style='margin-bottom: 260px;'><h1 style='text-align: center'>No more posts! <i class='fa fa-frown-o fa-1x'></i></h1></div>";
