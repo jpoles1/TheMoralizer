@@ -129,6 +129,14 @@ var moralizer = function() {
                 res.redirect("/");
             }
         });
+        self.app.get("/account", function(req, res){
+            if(req.signedCookies.login==1){
+                res.sendfile("account.html");
+            }
+            else{
+                res.redirect("/");
+            }
+        });
         self.app.get("/yourq", function(req, res){
             if(req.signedCookies.login==1){
                 res.sendfile("main.html");
@@ -184,8 +192,6 @@ var moralizer = function() {
                             var total = 0;
                             var addfract = 0;
                             var chcounts = [];
-                            //var colorpallate = ['#303E73', '#442F74', '#829DFF', '#A780FF', '#5064AD', '#6C4FAF', '#151D3A', '#20153A', '#000000'];
-                            //var colorpallate = ['#1f8dd6', '#2d3e50', '#1f8dd6', '#2d3e50', '#1f8dd6', '#2d3e50'];
                             for(var k in choices){
                                 total = total+ parseInt(records[i].counts[k]);
                                 chcounts.push(records[i].counts[k]);
@@ -212,7 +218,6 @@ var moralizer = function() {
                                         barcolor = '#1f8dd6';
                                     }
                                     else{
-                                        //barcolor = '#2d3e50';
                                         barcolor= 'grey';
                                     }
                                     progbar = progbar + "<div class='progress-bar tooltip' title='"+curopt[j]+" - "+dispfract+"% - "+chcounts[j]+" Votes' role='progressbar' aria-valuenow='60' aria-valuemin='0' aria-valuemax='100' style='border: 1px solid black; background-color:"+barcolor+";width: "+fract+"%;'>#"+parseInt(j+1)+" - "+dispfract+"%</div>";
@@ -225,7 +230,7 @@ var moralizer = function() {
                             }
                             else{
                                 formclass="doneform";
-                                progbar = "</br><div class='progress'>"+progbar+"</div>";
+                                progbar = "</br><hr><h3>Results:</h3><div class='progress'>"+progbar+"</div>";
                             }
                             content = content+"<div class='entry'><h1>"+records[i].title+"</h1><h3 style='text-align: right; margin-top: -30px;'>"+records[i].uname+"</h3>"+records[i].post+"<hr><form id='"+records[i]._id+"' class='"+formclass+"'>"+optinputs+"</form>"+progbar+"</div>";
                         }
