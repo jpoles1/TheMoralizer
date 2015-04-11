@@ -196,16 +196,16 @@ var moralizer = function() {
                                 total = total+ parseInt(records[i].counts[k]);
                                 chcounts.push(records[i].counts[k]);
                             }
-                            console.log(total);
+                            console.log(chcounts);
                             for(j=0; j<curopt.length; j++){
                                 var butclass = "button-secondary";
                                 if(myresponse==j){
                                     butclass = butclass+" pure-button-selected";
                                 }
                                 optinputs = optinputs+"<a class='pure-button "+butclass+"' style='width: 100%; margin-top:15px;' optnum='"+j+"'>#"+parseInt(j+1)+" - "+curopt[j]+"</a>"
-                                if(!isNaN(myresponse)){
-                                    console.log(parseInt(chcounts[j])/total);
+                                if(!isNaN(myresponse) && chcounts[j]>0){
                                     var fract = parseInt(chcounts[j]*100/total);
+                                    console.log(fract);
                                     var dispfract = fract;
                                     if(j+1<curopt.length){
                                         addfract+=fract;
@@ -289,6 +289,11 @@ var moralizer = function() {
                 var tags = formdata.tags;
                 var post = formdata.post;
                 var opt = formdata.opt;
+                var counts = {};
+                for(i=opt.length-1; i>=0; i--){
+                    counts["opt"+i] = 0;
+                }
+                console.log(counts);
                 var captcha = formdata.captcha;
                 var askadd = self.Post({
                     uname: req.signedCookies.uname,
@@ -297,7 +302,7 @@ var moralizer = function() {
                     options: opt,
                     tags: tags,
                     resp: {},
-                    counts: {}
+                    counts: counts
                 });
                 askadd.captcha = captcha;
                 askadd.save(function(err){
