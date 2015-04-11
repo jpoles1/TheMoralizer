@@ -46,8 +46,9 @@ label {
     text-align: center;
 }
 .progress {
+  border: 1px black solid;
   overflow: hidden;
-  height: 40px;
+  height: 50px;
   margin-bottom: 20px;
   background-color: #f5f5f5;
   border-radius: 4px;
@@ -58,7 +59,7 @@ label {
   float: left;
   width: 0%;
   height: 100%;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 20px;
   color: #fff;
   text-align: center;
@@ -68,8 +69,9 @@ label {
   -webkit-transition: width .6s ease;
   -o-transition: width .6s ease;
   transition: width .6s ease;
-padding-top: 10px;
+   padding-top: 15px;
     font-weight: bolder;
+
 }
 /*
  * -- PURE FORM STYLES --

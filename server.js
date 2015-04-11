@@ -182,8 +182,10 @@ var moralizer = function() {
                             var optinputs = "";
                             var progbar = "";
                             var total = 0;
+                            var addfract = 0;
                             var chcounts = [];
-                            var colorpallate = ['#303E73', '#442F74', '#829DFF', '#A780FF', '#5064AD', '#6C4FAF', '#151D3A', '#20153A', '#000000'];
+                            //var colorpallate = ['#303E73', '#442F74', '#829DFF', '#A780FF', '#5064AD', '#6C4FAF', '#151D3A', '#20153A', '#000000'];
+                            //var colorpallate = ['#1f8dd6', '#2d3e50', '#1f8dd6', '#2d3e50', '#1f8dd6', '#2d3e50'];
                             for(var k in choices){
                                 total = total+ parseInt(records[i].counts[k]);
                                 chcounts.push(records[i].counts[k]);
@@ -198,7 +200,22 @@ var moralizer = function() {
                                 if(!isNaN(myresponse)){
                                     console.log(parseInt(chcounts[j])/total);
                                     var fract = parseInt(chcounts[j]*100/total);
-                                    progbar = progbar + "<div class='progress-bar tooltip' title='"+curopt[j]+"' role='progressbar' aria-valuenow='60' aria-valuemin='0' aria-valuemax='100' style='border: 1px solid black; background-color:"+colorpallate[j]+";width: "+fract+"%;'>#"+parseInt(j+1)+" - "+fract+"%</div>";
+                                    var dispfract = fract;
+                                    if(j+1<curopt.length){
+                                        addfract+=fract;
+                                    }
+                                    else{
+                                        fract = 100-addfract;
+                                    }
+                                    var barcolor;
+                                    if(myresponse==j){
+                                        barcolor = '#1f8dd6';
+                                    }
+                                    else{
+                                        //barcolor = '#2d3e50';
+                                        barcolor= 'grey';
+                                    }
+                                    progbar = progbar + "<div class='progress-bar tooltip' title='"+curopt[j]+" - "+dispfract+"% - "+chcounts[j]+" Votes' role='progressbar' aria-valuenow='60' aria-valuemin='0' aria-valuemax='100' style='border: 1px solid black; background-color:"+barcolor+";width: "+fract+"%;'>#"+parseInt(j+1)+" - "+dispfract+"%</div>";
                                 }
                             }
                             var formclass= "selectedform";
