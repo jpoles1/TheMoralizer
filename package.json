@@ -12,13 +12,8 @@
     "name": "Jordan Poles",
     "email": "jpoles1@gmail.com"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/openshift/origin-server"
-  },
-  "engines": {
-    "node": ">= 0.6.0",
-    "npm": ">= 1.0.0"
+  "scripts": {
+    "start": "nodemon server.js"
   },
   "dependencies": {
     "MD5": "^1.2.1",
@@ -35,7 +30,7 @@
     "restler": "^3.2.2"
   },
   "devDependencies": {
-    "grunt-nodemon": "^0.4.0"
+    "nodemon": "^1.10.0"
   },
   "bundleDependencies": [],
   "private": true,
