@@ -13,6 +13,7 @@ app.set('view engine', 'dot');
 //Setup router
 global.router = express.Router();
 //And load in application config
+require("dotenv").config({path: ".env"});
 global.BASE_URL = "";
 global.PORT = process.env.OPENSHIFT_NODEJS_PORT || 4000;
 global.mongourl = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGODB_URI;
@@ -26,7 +27,7 @@ db.once('open', function (callback) {
     self.Post = require("./post.js");
 });
 //Run the routing
-router.use(express.static("res"));
+router.use("/res", express.static("res"));
 require("./routers/router");
 app.use(BASE_URL, router);
 app.listen(PORT);

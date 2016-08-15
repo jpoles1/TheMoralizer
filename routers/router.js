@@ -1,44 +1,28 @@
+require("./auth")
+router.use((req, res, next) => {
+  //Run this code for every request
+  if(req.user){
+    next()
+  }
+  else{
+    res.status(401);
+    res.render("index.dot")
+  }
+})
 router.get("/", function (req, res) {
-    //res.setHeader('Content-Type', 'text/html');
-    if(req.signedCookies.login==1){
-        res.sendfile("main.html");
-    }
-    else{
-        res.sendfile("index.html");
-        //res.send(self.cache_get('index.html') );
-    }
+  res.render("main.dot");
 });
 router.get("/ask", function(req, res){
-    if(req.signedCookies.login==1){
-        res.sendfile("ask.html");
-    }
-    else{
-        res.redirect("/");
-    }
+  res.render("ask.dot");
 });
 router.get("/account", function(req, res){
-    if(req.signedCookies.login==1){
-        res.sendfile("account.html");
-    }
-    else{
-        res.redirect("/");
-    }
+  res.render("account.dot");
 });
 router.get("/yourq", function(req, res){
-    if(req.signedCookies.login==1){
-        res.sendfile("main.html");
-    }
-    else{
-        res.redirect("/");
-    }
+  res.render("main.dot");
 });
 router.get("/yourv", function(req, res){
-    if(req.signedCookies.login==1){
-        res.sendfile("main.html");
-    }
-    else{
-        res.redirect("/");
-    }
+  res.render("main.dot");
 });
 router.get("/getposts*", function(req, res){
     if(req.signedCookies.login==1){

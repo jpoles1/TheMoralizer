@@ -1,0 +1,9 @@
+<meta http-equiv="refresh" content=".5;URL={{redir_url}}">
+<br><br>
+<center>
+  <h3>
+    {{error_text}}
+    <br>
+    <a href="{{redir_url}}">Redirecting...</a>
+  </h3>
+</center>
