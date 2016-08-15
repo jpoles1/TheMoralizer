@@ -14,21 +14,23 @@ app.set('view engine', 'dot');
 global.router = express.Router();
 //And load in application config
 require("dotenv").config({path: ".env"});
+require("dotenv").config({path: "deploy.env"});
 global.BASE_URL = "";
 global.PORT = process.env.OPENSHIFT_NODEJS_PORT || 4000;
-global.mongourl = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGODB_URI;
+var mongourl = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGODB_URI || "mongodb://localhost:27017/moralizer";
 //Setup DB connection
 var mongoose = require("mongoose")
 mongoose.connect(mongourl);
-global.db = mongoose.connection;
+var db = mongoose.connection;
+global.models = {}
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function (callback) {
-    self.User = require("./user.js");
-    self.Post = require("./post.js");
+    models.User = require("./models/user.js");
+    models.Post = require("./models/post.js");
+    //Run the routing
+    router.use("/res", express.static("res"));
+    require("./routers/router");
+    app.use(BASE_URL, router);
+    app.listen(PORT);
 });
-//Run the routing
-router.use("/res", express.static("res"));
-require("./routers/router");
-app.use(BASE_URL, router);
-app.listen(PORT);
 module.exports = app;
